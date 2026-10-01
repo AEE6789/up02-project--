@@ -43,3 +43,26 @@ class Product:
             f"{self.price} руб. × {self.quantity} = {self.total()} руб. "
             f"({self.indicator()})"
         )
+
+class Order:
+    """Класс Заказ (отредактирован под новые поля товара)."""
+
+    def __init__(self, order_id, date, client, product, quantity):
+        self.id = order_id
+        self.date = date
+        self.client = client
+        self.product = product      # Объект класса Product (содержит ваши 7 полей)
+        self.quantity = quantity
+
+    def total(self):
+        """Стоимость заказа."""
+        return self.product.price * self.quantity
+
+    def info(self):
+        """Строка с информацией о заказе с учетом категории и состава товара."""
+        return (
+            f"Заказ №{self.id} от {self.date}: {self.client} — "
+            f"{self.product.name} ({self.product.category}) | "
+            f"Состав: {self.product.composition} | "
+            f"{self.quantity} шт. на сумму {self.total()} руб."
+        )
