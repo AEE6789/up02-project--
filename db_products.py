@@ -91,7 +91,6 @@ if __name__ == "__main__":
     print_catalog_with_highlight(get_all_products())
 
     print("\n2. ТОВАРЫ КАТЕГОРИИ «Второе»:")
-    # Подставьте вашу категорию, если в БД нет «Кроссовки»
     print_catalog_with_highlight(get_products_by_category("Второе"))
 
     print("\n3. ТОВАРЫ С НИЗКИМ ОСТАТКОМ (≤12):")
