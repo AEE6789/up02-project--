@@ -1,21 +1,13 @@
-"""Модели данных для проекта УП.02."""
+"""Модели данных для проекта УП.02 (Кулинария)."""
+from datetime import datetime
+from discount import calculate_price_with_discount
 
 
 class Product:
-    """Класс Товар."""
+    """Класс Товар (Блюдо)."""
 
     def __init__(self, product_id, category, name, composition, price, quantity, photo):
-        """
-        Инициализация товара.
-
-        :param product_id: идентификатор (id)
-        :param category: категория
-        :param name: название
-        :param composition: состав
-        :param price: цена
-        :param quantity: количество
-        :param photo: фото (путь к файлу или ссылка)
-        """
+        """Инициализация товара с 7 полями вашей БД."""
         self.id = product_id
         self.category = category
         self.name = name
@@ -25,44 +17,48 @@ class Product:
         self.photo = photo
 
     def total(self):
-        """Общая стоимость (цена × количество)."""
+        """Общая стоимость остатка блюда."""
         return self.price * self.quantity
 
-    def price_with_discount(self, discount_percent):
-        """Цена со скидкой."""
-        return self.price * (1 - discount_percent / 100)
+    def price_with_discount_auto(self, date=None):
+        """Цена со скидкой по алгоритму ДЭ."""
+        if date is None:
+            date = datetime.now()
+        return calculate_price_with_discount(self.id, self.price, date)
 
     def indicator(self):
-        """Индикатор «много/мало» (порог 5)."""
+        """Индикатор остатка."""
         return "много" if self.quantity > 5 else "мало"
 
+    def is_available(self):
+        """Есть ли в наличии."""
+        return self.quantity > 0
+
     def info(self):
-        """Строка с информацией о товаре."""
+        """Информация о блюде."""
         return (
             f"{self.name} ({self.category}) | Состав: {self.composition}: "
             f"{self.price} руб. × {self.quantity} = {self.total()} руб. "
             f"({self.indicator()})"
         )
 
+
 class Order:
-    """Класс Заказ (отредактирован под новые поля товара)."""
+    """Класс Заказ."""
 
     def __init__(self, order_id, date, client, product, quantity):
         self.id = order_id
         self.date = date
         self.client = client
-        self.product = product      # Объект класса Product (содержит ваши 7 полей)
+        self.product = product  # Объект класса Product
         self.quantity = quantity
 
     def total(self):
-        """Стоимость заказа."""
         return self.product.price * self.quantity
 
     def info(self):
-        """Строка с информацией о заказе с учетом категории и состава товара."""
         return (
             f"Заказ №{self.id} от {self.date}: {self.client} — "
-            f"{self.product.name} ({self.product.category}) | "
-            f"Состав: {self.product.composition} | "
-            f"{self.quantity} шт. на сумму {self.total()} руб."
+            f"{self.product.name} × {self.quantity} шт."
         )
+
