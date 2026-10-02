@@ -41,3 +41,16 @@ credentials.txt
 # Временные файлы
 *.tmp
 *.bak
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Файлы Excel
+~$*.xlsx
+~$*.xls
+
+# Файлы БД SQLite (дополнительные логи транзакций)
+*.db-journal
+*.db-wal
+*.db-shm
