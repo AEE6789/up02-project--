@@ -69,3 +69,7 @@ class Order:
     def order_info(self):
         """Дополнительный метод информации для ДЗ."""
         return f"Заказ №{self.id} от {self.date}: {self.client}"
+
+    def is_available(self):
+        """Товар доступен для заказа?"""
+        return self.quantity > 0
