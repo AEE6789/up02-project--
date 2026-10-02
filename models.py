@@ -65,3 +65,7 @@ class Order:
             f"Заказ №{self.id} от {self.date}: {self.client} — "
             f"{self.product.name} × {self.quantity} шт."
         )
+
+    def order_info(self):
+        """Дополнительный метод информации для ДЗ."""
+        return f"Заказ №{self.id} от {self.date}: {self.client}"
