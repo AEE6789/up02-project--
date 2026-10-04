@@ -1,7 +1,6 @@
 """
 Каталог товаров проекта «Кулинария».
-Разработчик: mawr89-rgb
-Дата: 04.10.2026
+
 """
 import tkinter as tk
 from tkinter import ttk
@@ -13,7 +12,7 @@ try:
     from config import DB_PATH, COLOR_HIGHLIGHT, FONT_FAMILY
 except ImportError:
     COLOR_HIGHLIGHT = "#ff8080"
-    FONT_FAMILY = "Arial"
+    FONT_FAMILY = "Calibri"
 
 def create_product_card(parent, product):
     """
@@ -21,7 +20,7 @@ def create_product_card(parent, product):
     Порядок полей в вашей таблице «Товар»:
     0: id, 1: категория, 2: название, 3: состав, 4: цена, 5: количество, 6: фото
     """
-    qty = product[5]   # Индекс столбца 'количество' в вашей БД
+    qty = product[5]
     bg_color = COLOR_HIGHLIGHT if qty <= 12 else "white"
 
     # Контейнер карточки с рамкой
@@ -32,7 +31,7 @@ def create_product_card(parent, product):
     img_frame = tk.Frame(card, bg=bg_color)
     img_frame.pack(side="left", padx=10, pady=10)
 
-    # Индекс 6 — имя файла картинки в вашей БД
+
     image_name = product[6]
     image_path = f"resources/{image_name}" if image_name else "resources/picture.png"
     if not os.path.exists(image_path):
@@ -47,11 +46,11 @@ def create_product_card(parent, product):
     except Exception:
         tk.Label(img_frame, text="[ФОТО]", bg=bg_color, width=12, height=5, relief="sunken").pack()
 
-    # === Текстовая содержательная часть (справа от фото) ===
+    
     text_frame = tk.Frame(card, bg=bg_color)
     text_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
 
-    # 1. Производство | Наименование (Индекс 2 — название)
+    
     title = f"Кулинария | {product[2]}"
     tk.Label(text_frame, text=title, font=(FONT_FAMILY, 13, "bold"), bg=bg_color, anchor="w").pack(fill="x")
 
@@ -75,4 +74,11 @@ def create_product_card(parent, product):
     comp_text = f"Состав: {product[3]}"
     tk.Label(text_frame, text=comp_text, font=(FONT_FAMILY, 9, "italic"), fg="#444444", bg=bg_color, anchor="w", justify="left", wraplength=430).pack(fill="x", pady=(5, 0))
 
+
+     # Создаём тонкий Frame высотой 2 пикселя цвета Акцент (#70B2AF из шпаргалки)
+    separator = tk.Frame(parent, height=2, bg="#70B2AF")
+    # Размещаем его сразу под карточкой с внешними отступами
+    separator.pack(fill="x", padx=10, pady=4)
+    
+    
     return card

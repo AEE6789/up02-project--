@@ -1,6 +1,7 @@
 """Главное окно приложения с каталогом."""
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk  # Добавили импорт PIL для работы с логотипом
 from config import APP_TITLE, FONT_FAMILY
 import database as db
 from catalog import create_product_card
@@ -19,6 +20,20 @@ class CatalogWindow:
         # Заголовок
         header = tk.Frame(self.root, bg="#D2F6E7")
         header.pack(fill="x")
+
+
+        try:
+            logo = Image.open("resources/logo.png").resize((50, 50))
+            logo_photo = ImageTk.PhotoImage(logo)
+            logo_label = tk.Label(header, image=logo_photo, bg="#D2F6E7")
+            logo_label.image = logo_photo
+            logo_label.pack(side="left", padx=10)
+        except Exception:
+            # Безопасная заглушка на случай, если файл logo.png пустой или поврежден
+            tk.Label(header, text="[LOGO]", font=(FONT_FAMILY, 10, "bold"), 
+                     bg="#70B2AF", fg="white", width=6, height=2).pack(side="left", padx=10)
+
+        
         tk.Label(header, text="КАТАЛОГ ТОВАРОВ",
                  font=(FONT_FAMILY, 16, "bold"),
                  bg="#D2F6E7").pack(pady=15)
