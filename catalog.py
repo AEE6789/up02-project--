@@ -109,4 +109,4 @@ def _add_label(parent, text, bg_color, bold=False, size=FONT_SIZE_NORMAL, align=
 
 def _indicator(qty):
     """Индикатор «много/мало» по спецификации КИМ (порог 5 штук)."""
-    return "много" if qty > 5 else "мало"
+    return "много" if qty > 12 else "мало"
