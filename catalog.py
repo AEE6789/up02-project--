@@ -58,6 +58,7 @@ def create_product_card(parent, product):
     row_middle = tk.Frame(text_frame, bg=bg_color)
     row_middle.pack(fill="x", pady=2)
 
+    # Вызов индикатора по ТЗ Пары 13 (порог 5 штук)
     indicator = _indicator(qty)
     qty_text = f"Количество: {indicator} ({qty} шт.)"
     tk.Label(row_middle, text=qty_text, font=font(FONT_SIZE_NORMAL), bg=bg_color, anchor="w").pack(side="left")
@@ -94,18 +95,18 @@ def _add_text_info(card, product, bg_color, qty):
     row_middle = tk.Frame(text_frame, bg=bg_color)
     row_middle.pack(fill="x", pady=2)
     _add_label(row_middle, f"Количество: {_indicator(qty)} ({qty} шт.)", bg_color, side="left")
-    _add_label(row_middle, price_text, bg_color, bold=True, size=FONT_SIZE_HEADER, align="e", side="right")
+    _add_label(row_middle, price_text, bg_color, bold=True, size=FONT_SIZE_HEADER, align="e", side="right", fg="darkgreen")
     
     _add_label(text_frame, f"Состав: {composition}", bg_color)
 
-def _add_label(parent, text, bg_color, bold=False, size=FONT_SIZE_NORMAL, align="w", side=None):
+def _add_label(parent, text, bg_color, bold=False, size=FONT_SIZE_NORMAL, align="w", side=None, fg="black"):
     """Вспомогательный метод для отображения меток с поддержкой позиционирования."""
-    lbl = tk.Label(parent, text=text, font=font(size, bold=bold), bg=bg_color, anchor=align)
+    lbl = tk.Label(parent, text=text, font=font(size, bold=bold), bg=bg_color, anchor=align, fg=fg)
     if side:
         lbl.pack(side=side)
     else:
         lbl.pack(fill="x")
 
 def _indicator(qty):
-    """Определение остатка."""
-    return "много" if qty >= 12 else "мало"
+    """Индикатор «много/мало» по спецификации КИМ (порог 5 штук)."""
+    return "много" if qty > 5 else "мало"
