@@ -5,12 +5,18 @@
 import tkinter as tk
 from tkinter import ttk
 
-# Импорт цветов и шрифтов (Задание 7.4)
+# Импорт цветов и шрифтов (Задание 7.4) с добавлением COLOR_MAIN_BG
 from styles import (
-    COLOR_HIGHLIGHT, FONT_SIZE_NORMAL, FONT_SIZE_HEADER, font
+    COLOR_MAIN_BG, COLOR_HIGHLIGHT, FONT_SIZE_NORMAL, FONT_SIZE_HEADER, font
 )
 # Импорт умного загрузчика картинок (Задание 4.4)
 from resources import get_product_image
+
+# === ДОБАВЛЕНО ИЗ ЧЕТВЕРТОГО ЗАДАНИЯ ===
+def _get_card_color(qty):
+    """Возвращает цвет фона карточки на основе её количества."""
+    return COLOR_HIGHLIGHT if qty <= 12 else COLOR_MAIN_BG
+
 
 def create_product_card(parent, product):
     qty = product[5] if product[5] is not None else 0
