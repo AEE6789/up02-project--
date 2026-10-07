@@ -8,7 +8,7 @@ import database as db
 from catalog import create_product_card
 from resources import load_image_proportional, PATH_LOGO, PATH_ICON
 
-# Задание 6: безопасный вызов функций
+# Задание 6: безопасный вызов функций с отказоустойчивостью try-except
 from error_handler import safe_call
 
 
@@ -21,10 +21,10 @@ class CatalogWindow:
 
         self.set_icon()
         self.build_ui()
-        self.load_products()  # Первая загрузка 7 блюд
+        self.load_products()  # Первичная безопасная загрузка 7 блюд
 
     def set_icon(self):
-        """Установка иконки приложения."""
+        """Установка кроссплатформенной иконки приложения кулинарии."""
         try:
             if os.name == "nt":
                 self.root.iconbitmap(PATH_ICON)
@@ -39,7 +39,7 @@ class CatalogWindow:
             print(f"Не удалось установить иконку: {e}")
 
     def build_ui(self):
-        """Отрисовка главного интерфейса каталога."""
+        """Отрисовка главного графического интерфейса витрины каталога."""
         header = tk.Frame(self.root, bg=COLOR_SECONDARY_BG, height=80)
         header.pack(fill="x")
         header.pack_propagate(False)
@@ -71,17 +71,20 @@ class CatalogWindow:
         scrollbar.pack(side="right", fill="y")
 
     def load_products(self):
-        """Безопасная загрузка ассортимента под контролем safe_call."""
+        """ДЗ Задание 3: Безопасная загрузка ассортимента под контролем safe_call."""
         products = safe_call(db.get_all_products)
         if products is None:
             products = []
             
         for p in products:
-            # Передача refresh-команды для реактивного обновления
+            # Передача команды обновления для сквозной интеграции модулей
             safe_call(create_product_card, self.catalog_frame, p, refresh=self.refresh_catalog)
 
-    def refresh_catalog(self):
-        """Очистка витрины и перерисовка карточек с новыми остатками."""
+    def refresh_catalog(self, *args, **kwargs):
+        """
+        Очистка витрины и перерисовка карточек с новыми остатками.
+        Поддерживает произвольные аргументы (*args, **kwargs) от новой формы просмотра.
+        """
         for widget in self.catalog_frame.winfo_children():
             widget.destroy()
         self.load_products()
