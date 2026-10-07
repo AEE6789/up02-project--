@@ -1,9 +1,13 @@
-"""Тестирование индикатора «много/мало»."""
+"""Тестирование индикатора «много/мало» с проверкой отказоустойчивости."""
 from catalog import _indicator
 
 
-def test_indicator():
-    """Прогон тестов для индикатора с порогом 12."""
+def test_indicator_robustness():
+    """
+    Прогон тестов для индикатора с порогом 12.
+    Включае базовые проверки, тесты из задания и тесты ДЗ на плохие данные.
+    """
+    # 1. Основной пул тестов (Твой идеальный отредактированный список)
     test_cases = [
         # (qty, expected, comment)
         (10, "мало", "10 < 12 — меньше 12 (мало)"),
@@ -11,12 +15,13 @@ def test_indicator():
         (5, "мало", "5 < 12 — меньше 12 (мало)"),
         (4, "мало", "4 < 12 — меньше 12 (мало)"),
         (3, "мало", "3 <= 12 — твой минимальный остаток товара"),
-                #3 теста по заданию
+        
+        # 3 обязательных теста по заданию 4.6 (Числа 100, 1, -1)
         (100, "много", "большое число (100 > 12)"),
         (1, "мало", "минимальное > 0 (1 <= 12)"),
         (-1, "мало", "отрицательное — крайний случай (-1 <= 12)"),
 
-        # --- НОВЫЕ ТЕСТЫ ИЗ ДОМАШНЕГО ЗАДАНИЯ 1 ---
+        
         (1000, "много", "qty = 1000 — большое число"),
         (50, "много", "qty = 50 — среднее значение нормы"),
         (12, "мало", "qty = 12 — повторно точная граница (мало)"),
@@ -24,20 +29,47 @@ def test_indicator():
     ]
 
     print("=" * 60)
-    print("ТЕСТИРОВАНИЕ ИНДИКАТОРА (ПРАВИЛО: <= 12 — МЕНО СТАТУС МАЛО)")
+    print("ТЕСТИРОВАНИЕ ИНДИКАТОРА (ПРАВИЛО: <= 12 — СТАТУС МАЛО)")
     print("=" * 60)
 
     passed = 0
+    # Прогон стандартных тест-кейсов
     for qty, expected, comment in test_cases:
-        result = _indicator(qty)
-        status = "✅" if result == expected else "❌"
-        if result == expected:
-            passed += 1
-        print(f"{status} qty={qty}: {result} (ожидалось {expected}) — {comment}")
+        try:
+            result = _indicator(qty)
+            status = "✅" if result == expected else "❌"
+            if result == expected:
+                passed += 1
+            print(f"{status} qty={qty}: {result} (ожидалось {expected}) — {comment}")
+        except Exception as e:
+            print(f"❌ Сбой на значении qty={qty}: {e}")
+
+    # === 2. БЛОК ДОМАШНЕГО ЗАДАНИЯ №1: ТЕСТЫ НА НЕКОРРЕКТНЫЕ ДАННЫЕ ===
+    print("-" * 60)
+    print("БЛОК ДЗ: ПРОВЕРКА ОТКАЗОУСТОЙЧИВОСТИ НА АНОМАЛЬНЫЕ ТИПЫ")
+    print("-" * 60)
+    
+    bad_cases = [
+        (None, "мало", "Проверка NoneType (пустая ячейка БД)"),
+        ("10", "мало", "Проверка строки вместо числа"),
+        (0.5, "мало", "Проверка дробного числа остатка")
+    ]
+    
+    for val, expected, comment in bad_cases:
+        try:
+            result = _indicator(val)
+            status = "✅" if result == expected else "❌"
+            if result == expected:
+                passed += 1
+            print(f"{status} val={val} ({type(val).__name__}): {result} — {comment}")
+        except Exception as e:
+            print(f"❌ Функция выбросила исключение на {type(val).__name__}: {e}")
 
     print("=" * 60)
-    print(f"Пройдено: {passed} / {len(test_cases)}")
+    total_cases = len(test_cases) + len(bad_cases)
+    print(f"ИТОГ ДЗ: Пройдено тестов: {passed} / {total_cases}")
 
 
+# ВЫЗОВ ИСПРАВЛЕН — теперь имя функции совпадает полностью!
 if __name__ == "__main__":
-    test_indicator()
+    test_indicator_robustness()

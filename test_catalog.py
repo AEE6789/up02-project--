@@ -1,5 +1,6 @@
-"""Тестирование каталога и структуры базы данных Варианта №20."""
+"""Тестирование каталога на основе реальной структуры базы данных (7 полей)."""
 import database as db
+
 
 
 def test_db_available():
@@ -21,82 +22,78 @@ def test_products_count():
         return False
 
 
-def test_product_fields():
-    """Проверяет, что у всех товаров достаточно полей для отображения."""
+def test_product_fields_count():
+    """Проверяет, что у всех товаров ровно 7 полей согласно скриншоту."""
     try:
         products = db.get_all_products()
         for p in products:
-            if len(p) < 6:
-                print(f"❌ Товар ID {p[0] if len(p)>0 else '???'}: мало полей ({len(p)})")
+            if len(p) != 7:
+                print(f"❌ Товар id={p[0]}: неверное количество полей ({len(p)} вместо 7)")
                 return False
         return True
-    except Exception as e:
-        print(f"❌ Ошибка теста полей: {e}")
+    except Exception:
         return False
 
 
 def test_prices_are_numbers():
-    """Автоматически находит поле цены и проверяет, что это число."""
+    """Проверяет, что все цены (индекс 4) — числа."""
     try:
         products = db.get_all_products()
         for p in products:
-            numerical_values = [val for val in p if isinstance(val, (int, float)) and not isinstance(val, bool)]
-            
-            # Если чисел вообще нет (кроме возможно ID), это ошибка данных
-            if len(numerical_values) < 2:
-                print(f"❌ Товар ID {p[0]}: в записи не найдены числовые поля для цены и количества")
+            if not isinstance(p[4], (int, float)):
+                print(f"❌ Товар id={p[0]}: цена на индексе 4 не число")
                 return False
         return True
-    except Exception as e:
-        print(f"❌ Ошибка теста цен: {e}")
+    except Exception:
         return False
 
 
 def test_quantity_not_negative():
-    """Проверяет, что складское количество не ушло в минус."""
+    """Проверяет, что количество (индекс 5) не отрицательное."""
     try:
         products = db.get_all_products()
         for p in products:
-            # Проверяем все числовые поля на отрицательность (количество порций не может быть < 0)
-            for val in p:
-                if isinstance(val, (int, float)) and val < 0:
-                    print(f"❌ Товар ID {p[0]}: обнаружено отрицательное значение ({val})")
-                    return False
+            if p[5] < 0:
+                print(f"❌ Товар id={p[0]}: отрицательное количество")
+                return False
         return True
-    except Exception as e:
-        print(f"❌ Ошибка теста количества: {e}")
+    except Exception:
         return False
 
 
-def test_names_not_empty():
-    """Дополнительный тест из Задания 6.6: проверяет наличие названий блюд."""
+def test_at_least_one_image():
+    """
+    Выполнение Домашнего задания №2.
+    Проверяет, что хотя бы у одного товара есть изображение на твоём индексе 6.
+    """
     try:
         products = db.get_all_products()
         for p in products:
-            # Ищем непустую строку среди первых полей кортежа (где обычно имя и категория)
-            text_fields = [str(val).strip() for val in p if isinstance(val, str)]
-            if not text_fields or any(txt == "" or txt == "None" for txt in text_fields[:2]):
-                print(f"❌ Товар ID {p[0]}: найдено пустое обязательное текстовое поле")
-                return False
-        return True
+            # Твой реальный индекс 6 (поле фото: shi.png, kotlety.png и т.д.)
+            photo_field = p[6]
+            if photo_field is not None and str(photo_field).strip() != "" and str(photo_field) != "None":
+                return True  # Файл картинки найден, тест пройден успешно!
+        
+        print("❌ Ошибка ДЗ: ни у одного товара в БД нет изображения")
+        return False
     except Exception as e:
-        print(f"❌ Ошибка теста наименований: {e}")
+        print(f"❌ Сбой при проверке картинок: {e}")
         return False
 
 
 def run_all_tests():
     """Прогон всех тестов каталога кулинарии."""
     tests = [
-        ("БД доступна", test_db_available),
-        ("Товары загружены", test_products_count),
-        ("У всех товаров нужные поля", test_product_fields),
-        ("Все цены — числа", test_prices_are_numbers),
-        ("Количество не отрицательное", test_quantity_not_negative),
-        ("Названия не пустые", test_names_not_empty)
+        ("БД доступна для подключения", test_db_available),
+        ("Товары успешно загружены из таблиц", test_products_count),
+        ("У всех товаров ровно 7 полей в строке", test_product_fields_count),
+        ("Все цены на индексе 4 — числа", test_prices_are_numbers),
+        ("Количество на индексе 5 не отрицательное", test_quantity_not_negative),
+        ("Хотя бы у одного товара есть фото (ДЗ 2, индекс 6)", test_at_least_one_image),
     ]
 
     print("=" * 60)
-    print("ТЕСТИРОВАНИЕ КАТАЛОГА (УНИВЕРСАЛЬНЫЙ СКАНИРУЮЩИЙ СКРИПТ)")
+    print("ТЕСТИРОВАНИЕ КАТАЛОГА (СТРОГО ПО СКРИНШОТАМ БД)")
     print("=" * 60)
 
     passed = 0
