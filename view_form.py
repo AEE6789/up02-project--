@@ -106,9 +106,6 @@ class ViewForm:
         value_txt.pack(side="left", fill="x", expand=True)
     
     def add_to_order(self):
-        if not self.on_add_to_order:
-            messagebox.showinfo("Информация", "Функция в разработке")
-            return
         if not self.product:
             messagebox.showerror("Ошибка", "Товар не выбран")
             return
@@ -123,15 +120,37 @@ class ViewForm:
             
         qty_to_order = result  # Чистое проверенное целое число
         
-        # Проверяем лимиты кухни (остаток на индексе 5)
+        # Проверяем лимиты кухни (id на индексе 0, остаток на индексе 5)
+        product_id = self.product[0]
         current_stock = self.product[5] if self.product[5] is not None else 0
+        
         if qty_to_order > current_stock:
             messagebox.showwarning("Дефицит", f"Нельзя заказать {qty_to_order} порц.\nНа складе доступно всего: {current_stock} шт.")
             return
             
         try:
-            # Передаем в callback-функцию: сам продукт, выбранное количество и порцию
-            # Это полностью подготовит проект к интеграционной Паре 21
-            self.on_add_to_order(self.product, qty_to_order, self.size_var.get())
+            # === ИНТЕГРАЦИЯ С БД: Сохранение и обновление ===
+            from order_manager import add_order_to_db, update_product_quantity
+            
+            new_qty = current_stock - qty_to_order
+            
+            # Записываем заказ реального студента в БД и уменьшаем остатки
+            add_order_to_db("Ахмедов Эмир Энверович", product_id, qty_to_order)
+            update_product_quantity(product_id, new_qty)
+            
+            messagebox.showinfo(
+                "Заказ оформлен", 
+                f"Успешно добавлено в заказ!\n\n"
+                f"Блюдо: {self.product[2]}\n"
+                f"Количество: {qty_to_order} шт.\n"
+                f"Размер порции: {self.size_var.get()}"
+            )
+            
+            # Вызываем callback для обновления главного каталога
+            if self.on_add_to_order:
+                self.on_add_to_order()
+                
+            self.window.destroy()
+            
         except Exception as e:
-            messagebox.showerror("Ошибка заказа", f"Не удалось добавить товар:\n{e}")
+            messagebox.showerror("Ошибка заказа", f"Не удалось добавить товар в БД:\n{e}")

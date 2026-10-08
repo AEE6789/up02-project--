@@ -28,8 +28,8 @@ def _get_card_color(qty):
 
 def _open_view(parent, product, refresh=None):
     """
-    Вспомогательная функция Задания 6.1.
-    Импортирует форму просмотра и открывает её, передавая данные и callback.
+    Вспомогательная функция Задания 5.5.
+    Импортирует форму просмотра и открывает её, передавая данные и callback обновления.
     """
     from view_form import ViewForm
     ViewForm(parent, product, on_add_to_order=refresh)
@@ -99,7 +99,7 @@ def create_product_card(parent, product, refresh=None):
     separator = tk.Frame(parent, height=2, bg="#70B2AF")
     separator.pack(fill="x", padx=10, pady=4)
     
-    # === РЕАЛИЗАЦИЯ ЗАДАНИЯ 6.1 (ПРИВЯЗКА КЛИКА ЛКМ) ===
+    # === ВЫПОЛНЕНИЕ ЗАДАНИЯ 5.5: Сквозной проброс аргумента refresh при клике ===
     # Привязываем клик к самому фрейму карточки
     card.bind("<Button-1>", lambda e: _open_view(parent, product, refresh))
     
