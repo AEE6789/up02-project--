@@ -39,3 +39,23 @@ def get_all_products():
         
     finally:
         conn.close()
+
+def get_user_by_login(login):
+    """
+    Ищет пользователя по логину (Адаптировано под Вариант №20).
+    :param login: логин
+    :return: кортеж (id, логин, фио, роль) или None
+    """
+    import sqlite3
+    from config import DB_PATH
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    # Выбираем поля точь-в-точь по структуре твоей таблицы Пользователь
+    cur.execute("""
+        SELECT id, логин, фио, роль
+        FROM Пользователь
+        WHERE логин = ?
+    """, (login,))
+    row = cur.fetchone()
+    conn.close()
+    return row

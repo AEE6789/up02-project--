@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import os
 
 from styles import COLOR_SECONDARY_BG, COLOR_MAIN_BG, FONT_SIZE_TITLE, COLOR_ACCENT, FONT_SIZE_NORMAL, font
@@ -19,9 +19,16 @@ class CatalogWindow:
         self.root.geometry("900x700")
         self.root.configure(bg=COLOR_MAIN_BG)
 
+        # Переменные для хранения роли и виджета ФИО
+        self.current_user = None
+        self.user_label = None
+
         self.set_icon()
         self.build_ui()
         self.load_products()  # Первичная безопасная загрузка 7 блюд
+        
+        # === ВЫПОЛНЕНИЕ ЗАДАНИЯ 6.2: Авторизация при старте системы ===
+        self.require_auth()
 
     def set_icon(self):
         """Установка кроссплатформенной иконки приложения кулинарии."""
@@ -40,28 +47,29 @@ class CatalogWindow:
 
     def build_ui(self):
         """Отрисовка главного графического интерфейса витрины каталога."""
-        header = tk.Frame(self.root, bg=COLOR_SECONDARY_BG, height=80)
-        header.pack(fill="x")
-        header.pack_propagate(False)
+        # Делаем фрейм шапки доступным через self для динамического добавления кнопок
+        self.header = tk.Frame(self.root, bg=COLOR_SECONDARY_BG, height=80)
+        self.header.pack(fill="x")
+        self.header.pack_propagate(False)
 
         logo = load_image_proportional(PATH_LOGO, max_size=(60, 60))
         if logo:
-            logo_label = tk.Label(header, image=logo, bg=COLOR_SECONDARY_BG)
+            logo_label = tk.Label(self.header, image=logo, bg=COLOR_SECONDARY_BG)
             logo_label.image = logo
             logo_label.pack(side="left", padx=15)
         else:
-            tk.Label(header, text="[ЛОГОТИП]", font=font(),
+            tk.Label(self.header, text="[ЛОГОТИП]", font=font(),
                      bg="#70B2AF", fg="white", width=9, height=2).pack(side="left", padx=15)
 
-        tk.Label(header, text="КАТАЛОГ ТОВАРОВ",
+        tk.Label(self.header, text="КАТАЛОГ ТОВАРОВ",
                  font=font(FONT_SIZE_TITLE, bold=True),
                  bg=COLOR_SECONDARY_BG).pack(side="left", expand=True)
 
-        # === ВЫПОЛНЕНИЕ ЗАДАНИЯ 5.3: Добавление кнопки «Заказы» в шапку каталога ===
-        tk.Button(header, text="Заказы", command=self.open_orders,
-                  bg=COLOR_ACCENT, fg="white",
-                  font=font(FONT_SIZE_NORMAL),
-                  padx=10, pady=5).pack(side="right", padx=15)
+        # === ТРЕБОВАНИЕ КИМ: Метка вывода ФИО пользователя в правом верхнем углу ===
+        self.user_label = tk.Label(self.header, text="Не авторизован",
+                                   font=font(FONT_SIZE_NORMAL, bold=True),
+                                   bg=COLOR_SECONDARY_BG, fg="#333333")
+        self.user_label.pack(side="right", padx=15)
 
         self.canvas = tk.Canvas(self.root, bg=COLOR_MAIN_BG, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
@@ -76,6 +84,59 @@ class CatalogWindow:
         self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
+    # === ДОБАВЛЕНО ДЛЯ ЗАДАНИЯ 6.2: Вызов модального окна входа ===
+    def require_auth(self):
+        """Запрашивает авторизацию у пользователя."""
+        from auth import AuthWindow
+        AuthWindow(self.root, self.on_auth_success)
+
+    # === ДОБАВЛЕНО ДЛЯ ЗАДАНИЯ 6.2: Обработчик успешного входа ===
+    def on_auth_success(self, user):
+        """
+        Обработчик успешной авторизации.
+        :param user: кортеж (id, логин, фио, роль) из твоей реальной БД
+        """
+        self.current_user = user
+
+        # Считываем ФИО (индекс 2) и Роль (индекс 3) строго по структуре твоих колонок
+        fio = str(user[2]).strip()
+        role = str(user[3]).strip()
+
+        # Выводим ФИО в правый угол
+        self.user_label.config(text=f"{fio}\n[{role}]")
+
+        # Передаем роль в распределитель прав доступа
+        self.add_role_buttons(role)
+
+    # === ДОБАВЛЕНО ДЛЯ ЗАДАНИЯ 6.2: Распределитель кнопок по матрице прав ===
+    def add_role_buttons(self, role):
+        """
+        Добавляет кнопки управления в шапку в зависимости от роли.
+        :param role: название роли (строка)
+        """
+        # Менеджер и Администратор видят кнопку перехода к заказам
+        if role in ("Менеджер", "Администратор"):
+            tk.Button(self.header, text="Заказы", command=self.open_orders,
+                      bg=COLOR_ACCENT, fg="white",
+                      font=font(FONT_SIZE_NORMAL, bold=True),
+                      padx=10, pady=5).pack(side="right", padx=10)
+
+        # Только Администратор видит кнопку Админ-панели
+        if role == "Администратор":
+            tk.Button(self.header, text="Админ-панель", command=self.open_admin,
+                      bg=COLOR_ACCENT, fg="white",
+                      font=font(FONT_SIZE_NORMAL, bold=True),
+                      padx=10, pady=5).pack(side="right", padx=10)
+
+    def open_orders(self):
+        """Открывает окно списка заказов."""
+        from orders_window import OrdersWindow
+        OrdersWindow(self.root, self.current_user)
+
+    def open_admin(self):
+        """Заглушка для окна администратора."""
+        messagebox.showinfo("Админ-панель", "Доступ разрешен для роли Администратор!")
+
     def load_products(self):
         """ДЗ Задание 3: Безопасная загрузка ассортимента под контролем safe_call."""
         products = safe_call(db.get_all_products)
@@ -83,25 +144,16 @@ class CatalogWindow:
             products = []
             
         for p in products:
-            # Передача команды обновления для сквозной интеграции модулей
             safe_call(create_product_card, self.catalog_frame, p, refresh=self.refresh_catalog)
 
     def refresh_catalog(self, *args, **kwargs):
-        """
-        Очистка витрины и перерисовка карточек с новыми остатками.
-        Поддерживает произвольные аргументы (*args, **kwargs) от новой формы просмотра.
-        """
+        """Очистка витрины и перерисовка карточек с новыми остатками."""
         for widget in self.catalog_frame.winfo_children():
             widget.destroy()
         self.load_products()
 
     def run(self):
         self.root.mainloop()
-
-    def open_orders(self):
-        """Открывает окно списка заказов."""
-        from orders_window import OrdersWindow
-        OrdersWindow(self.root)
 
 
 if __name__ == "__main__":
