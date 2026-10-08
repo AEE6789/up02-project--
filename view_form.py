@@ -119,13 +119,14 @@ class ViewForm:
                              anchor="w", bg=COLOR_MAIN_BG, justify="left", wraplength=450)
         value_txt.pack(side="left", fill="x", expand=True)
     
+    # === ВЫПОЛНЕНИЕ ЗАДАНИЯ 6.5 С КОРРЕКТНЫМ КОМПЛЕКСНЫМ ВЫЗОВОМ ===
     def add_to_order(self):
         """Обработчик кнопки «Добавить в заказ» с валидацией и интеграцией БД."""
         if not self.product:
             messagebox.showerror("Ошибка", "Товар не выбран")
             return
             
-        # === ДЗ ПУНКТ 2: Валидация числового ввода через функцию из error_handler ===
+        # === Валидация числового ввода через функцию из error_handler ===
         from error_handler import validate_positive_int
         ok, result = validate_positive_int(self.qty_var.get(), "Количество")
         
@@ -138,33 +139,37 @@ class ViewForm:
         # Проверяем лимиты кухни (id на индексе 0, остаток на индексе 5)
         product_id = self.product[0]
         current_stock = self.product[5] if self.product[5] is not None else 0
+        price_per_item = self.product[4] if self.product[4] is not None else 0
         
         if qty_to_order > current_stock:
             messagebox.showwarning("Дефицит", f"Нельзя заказать {qty_to_order} порц.\nНа складе доступно всего: {current_stock} шт.")
             return
             
         try:
-            # === ИНТЕГРАЦИЯ С БД: Сохранение и списание остатков ===
-            from order_manager import add_order_to_db, update_product_quantity
+            # === ИНТЕГРАЦИЯ С БД: Вызов комплексного метода create_order ===
+            from order_manager import create_order
             
-            new_qty = current_stock - qty_to_order
+            # Подготовка списка кортежей для транзакции чека
+            items_to_order = [(product_id, self.size_var.get(), qty_to_order, price_per_item)]
             
-            # Записываем заказ реального студента в БД и уменьшаем остатки
-            add_order_to_db("Ахмедов Эмир Энверович", product_id, qty_to_order)
-            update_product_quantity(product_id, new_qty)
+            # Передаем комплексную операцию (создание + вставка состава + уменьшение UPDATE остатков)
+            order_id = create_order("Ахмедов Эмир Энверович", items_to_order)
             
-            messagebox.showinfo(
-                "Успех", 
-                f"Товар добавлен в заказ ({qty_to_order} шт.)\n\n"
-                f"Блюдо: {self.product[2]}\n"
-                f"Размер порции: {self.size_var.get()}"
-            )
-            
-            # Вызываем callback для реактивного обновления главного каталога
-            if self.on_add_to_order:
-                self.on_add_to_order()
+            if order_id:
+                messagebox.showinfo(
+                    "Успех", 
+                    f"Товар добавлен в заказ ({qty_to_order} шт.)\n\n"
+                    f"Блюдо: {self.product[2]}\n"
+                    f"Размер порции: {self.size_var.get()}"
+                )
                 
-            self.window.destroy()
+                # === ЗАДАНИЕ 6.5: Вызов callback для реактивного обновления каталога ===
+                if self.on_add_to_order:
+                    self.on_add_to_order()
+                    
+                self.window.destroy()
+            else:
+                messagebox.showerror("Ошибка СУБД", "Не удалось зафиксировать атомарную транзакцию заказа.")
             
         except Exception as e:
-            messagebox.showerror("Ошибка заказа", f"Не удалось добавить товар в БД:\n{e}")
+            messagebox.showerror("Ошибка заказа", f"Критический сбой при добавлении в БД:\n{e}")

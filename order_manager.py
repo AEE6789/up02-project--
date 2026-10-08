@@ -61,19 +61,18 @@ def add_order_item(order_id, product_id, size, quantity, price):
     return item_id
 
 
-# === ЗАДАНИЕ 6.4: КОМПЛЕКСНАЯ ФУНКЦИЯ CREATE_ORDER ===
 def create_order(client, items):
     """
-    Создаёт заказ с несколькими позициями.
+    Создаёт заказ с несколькими позициями и пересчитывает остатки.
     :param client: ФИО клиента
     :param items: список кортежей (product_id, size, quantity, price)
-    :return: id заказа
+    :return: id заказа или None
     """
     conn = get_connection()
     cur = conn.cursor()
 
     try:
-        # 1. Создаём заказ (передаем заглушки 0, 0 для совместимости)
+        # 1. Создаём заголовок заказа (совместимость с NOT NULL и client на латинице)
         date = datetime.now().strftime("%Y-%m-%d")
         cur.execute(
             "INSERT INTO Заказ (дата, клиент, товар_id, количество) VALUES (?, ?, ?, ?)",
@@ -81,26 +80,40 @@ def create_order(client, items):
         )
         order_id = cur.lastrowid
 
-        # 2. Добавляем позиции в новую таблицу Состав_заказа
+        # 2. Добавляем позиции И уменьшаем остатки еды на кухне кулинарии
         for product_id, size, quantity, price in items:
+            # Проверяем наличие порций
+            cur.execute("SELECT количество FROM Товар WHERE id = ?", (product_id,))
+            row = cur.fetchone()
+            if not row or row[0] < quantity:
+                raise ValueError(f"Недостаточно товара id={product_id}")
+
+            # Добавляем позицию в Состав_заказа
             cur.execute(
                 "INSERT INTO Состав_заказа "
-                "(заказ_id, товар_id, размер, количество, цена) "  # ИСПРАВЛЕНО: строго 'цена'
+                "(заказ_id, товар_id, размер, количество, цена) "
                 "VALUES (?, ?, ?, ?, ?)",
                 (order_id, product_id, size, quantity, price)
             )
 
-        # 3. Фиксируем изменения
+            # Автоматически уменьшаем остаток в таблице Товар
+            cur.execute(
+                "UPDATE Товар SET количество = количество - ? WHERE id = ?",
+                (quantity, product_id)
+            )
+
+        # 3. Фиксируем ВСЁ, если все шаги цикла завершились успешно
         conn.commit()
         return order_id
 
     except Exception as e:
-        conn.rollback()
+        conn.rollback()  # Полный откат изменений при любой ошибке
         print(f"Ошибка создания заказа: {e}")
         return None
 
     finally:
         conn.close()
+
 
 
 # === МЕТОДЫ ПРОШЛЫХ ПАР ДЛЯ СТАБИЛЬНОСТИ СИСТЕМЫ ===
@@ -120,3 +133,49 @@ def get_product_quantity(product_id):
     row = cur.fetchone()
     conn.close()
     return row[0] if row else 0
+
+def decrease_product_quantity(product_id, quantity):
+    """
+    Уменьшает количество товара на складе (Пара 23, Задание 4.4).
+    :param product_id: id товара
+    :param quantity: на сколько уменьшить
+    :return: True при успехе, False при ошибке
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        # Проверяем, что товара достаточно
+        cur.execute("SELECT количество FROM Товар WHERE id = ?", (product_id,))
+        row = cur.fetchone()
+        if not row:
+            return False
+
+        current = row[0]
+        if current < quantity:
+            return False
+
+        # Уменьшаем остаток порций блюда на кухне кулинарии
+        cur.execute(
+            "UPDATE Товар SET количество = количество - ? WHERE id = ?",
+            (quantity, product_id)
+        )
+        conn.commit()
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        print(f"Ошибка обновления: {e}")
+        return False
+
+    finally:
+        conn.close()
+
+def refresh_catalog(self):
+    """Обновляет каталог."""
+    # Удаляем все существующие карточки
+    for widget in self.catalog_frame.winfo_children():
+        widget.destroy()
+    # Загружаем товары заново
+    self.load_products()
+

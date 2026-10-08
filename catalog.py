@@ -27,12 +27,11 @@ def _get_card_color(qty):
 
 
 def _open_view(parent, product, refresh=None):
-    """
-    Вспомогательная функция Задания 5.5.
-    Импортирует форму просмотра и открывает её, передавая данные и callback обновления.
-    """
+    """Открывает форму просмотра товара."""
     from view_form import ViewForm
+    # Передаем refresh в именованный аргумент on_add_to_order
     ViewForm(parent, product, on_add_to_order=refresh)
+
 
 
 def create_product_card(parent, product, refresh=None):
@@ -40,7 +39,7 @@ def create_product_card(parent, product, refresh=None):
     # Безопасное извлечение количества (индекс 5 по скриншоту)
     qty = product[5] if product[5] is not None else 0
     
-    # ИСПРАВЛЕНО: Вызываем готовую функцию и убираем жесткую строку "white"
+    # Вызываем готовую функцию и убираем жесткую строку "white"
     bg_color = _get_card_color(qty)
 
     card = tk.Frame(parent, bg=bg_color, bd=1, relief="solid")
@@ -99,7 +98,7 @@ def create_product_card(parent, product, refresh=None):
     separator = tk.Frame(parent, height=2, bg="#70B2AF")
     separator.pack(fill="x", padx=10, pady=4)
     
-    # === ВЫПОЛНЕНИЕ ЗАДАНИЯ 5.5: Сквозной проброс аргумента refresh при клике ===
+    # === ВЫПОЛНЕНИЕ ЗАДАНИЯ 6.3: Сквозной проброс аргумента refresh при клике ===
     # Привязываем клик к самому фрейму карточки
     card.bind("<Button-1>", lambda e: _open_view(parent, product, refresh))
     
@@ -148,7 +147,7 @@ def _add_label(parent, text, bg_color, bold=False, size=FONT_SIZE_NORMAL, align=
 
 
 def _indicator(qty):
-    """ Безопасный индикатор остатков товара с индивидуальным порогом 12. """
+    """ Безопасный indicator остатков товара с индивидуальным порогом 12. """
     try:
         if qty is None: qty = 0
         if isinstance(qty, str) and qty.strip().isdigit(): qty = int(qty)
