@@ -90,16 +90,15 @@ class OrdersWindow:
         except Exception as e:
             messagebox.showerror("Ошибка СУБД", f"Не удалось загрузить заказы:\n{e}")
 
+    
     def on_order_select(self, event=None):
-        """Обработчик выбора заказа."""
         selected = self.tree.selection()
         if not selected:
-            messagebox.showwarning("Внимание", "Пожалуйста, выделите строку из журнала.")
             return
-
+        
         item = self.tree.item(selected[0])
         order_id = item["values"][0]
 
-        # Открываем окно состава заказа (Пара 25)
         from order_items_window import OrderItemsWindow
-        OrderItemsWindow(self.window, order_id)
+        # Проброс сессии пользователя для разграничения прав доступа
+        OrderItemsWindow(self.window, order_id, self.current_user)
