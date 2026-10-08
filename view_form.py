@@ -8,6 +8,9 @@ from styles import (
 )
 from resources import get_product_image
 
+# === ЗАДАНИЕ 4.2: Импорт функции порционных размеров ===
+from db_products import get_product_sizes
+
 
 class ViewForm:
     """Форма просмотра выбранного блюда кулинарии Варианта №20."""
@@ -62,23 +65,34 @@ class ViewForm:
         self._add_field(info_frame, "Стоимость порции", f"{self.product[4]} руб.")
         self._add_field(info_frame, "Доступно на кухне", f"{self.product[5]} шт.")
         
-        # === ДЗ ПУНКТ 2: Поле ввода количества порций (tk.Entry) ===
+        # === ЗАДАНИЕ 4.2: Поле ввода количества порций (tk.Entry) ===
         qty_frame = tk.Frame(info_frame, bg=COLOR_MAIN_BG)
-        qty_frame.pack(fill="x", pady=6)
-        tk.Label(qty_frame, text="Количество порций:", font=font(FONT_SIZE_NORMAL, bold=True), bg=COLOR_MAIN_BG).pack(side="left", padx=5)
-        
+        qty_frame.pack(fill="x", pady=10)
+
+        tk.Label(qty_frame, text="Количество:", font=font(FONT_SIZE_NORMAL),
+                 bg=COLOR_MAIN_BG).pack(side="left", padx=5)
+
         self.qty_var = tk.StringVar(value="1")
-        qty_entry = tk.Entry(qty_frame, textvariable=self.qty_var, width=6, font=font(FONT_SIZE_NORMAL), bd=1, relief="solid")
+        qty_entry = tk.Entry(qty_frame, textvariable=self.qty_var, width=5,
+                             font=font(FONT_SIZE_NORMAL))
         qty_entry.pack(side="left", padx=5)
 
-        # === ДЗ ПУНКТ 2: Выпадающий список порционных размеров (ttk.Combobox) ===
+        # === ЗАДАНИЕ 4.2: Выбор размера (ttk.Combobox) ===
         size_frame = tk.Frame(info_frame, bg=COLOR_MAIN_BG)
-        size_frame.pack(fill="x", pady=6)
-        tk.Label(size_frame, text="Размер порции:", font=font(FONT_SIZE_NORMAL, bold=True), bg=COLOR_MAIN_BG).pack(side="left", padx=5)
-        
-        sizes = ["Стандарт", "XL-порция", "Детская"]
+        size_frame.pack(fill="x", pady=10)
+
+        tk.Label(size_frame, text="Размер:", font=font(FONT_SIZE_NORMAL),
+                 bg=COLOR_MAIN_BG).pack(side="left", padx=5)
+
+        # Получаем размеры из БД по id товара (индекс 0) через функцию из db_products.py
+        sizes = get_product_sizes(self.product[0])  
+        if not sizes:
+            sizes = ["—"]
+
         self.size_var = tk.StringVar(value=sizes[0])
-        size_combo = ttk.Combobox(size_frame, textvariable=self.size_var, values=sizes, state="readonly", width=12, font=font(FONT_SIZE_NORMAL))
+        size_combo = ttk.Combobox(size_frame, textvariable=self.size_var,
+                                  values=sizes, state="readonly", width=12,
+                                  font=font(FONT_SIZE_NORMAL))
         size_combo.pack(side="left", padx=5)
         
         # Кнопки управления
@@ -106,6 +120,7 @@ class ViewForm:
         value_txt.pack(side="left", fill="x", expand=True)
     
     def add_to_order(self):
+        """Обработчик кнопки «Добавить в заказ» с валидацией и интеграцией БД."""
         if not self.product:
             messagebox.showerror("Ошибка", "Товар не выбран")
             return
@@ -129,7 +144,7 @@ class ViewForm:
             return
             
         try:
-            # === ИНТЕГРАЦИЯ С БД: Сохранение и обновление ===
+            # === ИНТЕГРАЦИЯ С БД: Сохранение и списание остатков ===
             from order_manager import add_order_to_db, update_product_quantity
             
             new_qty = current_stock - qty_to_order
@@ -139,14 +154,13 @@ class ViewForm:
             update_product_quantity(product_id, new_qty)
             
             messagebox.showinfo(
-                "Заказ оформлен", 
-                f"Успешно добавлено в заказ!\n\n"
+                "Успех", 
+                f"Товар добавлен в заказ ({qty_to_order} шт.)\n\n"
                 f"Блюдо: {self.product[2]}\n"
-                f"Количество: {qty_to_order} шт.\n"
                 f"Размер порции: {self.size_var.get()}"
             )
             
-            # Вызываем callback для обновления главного каталога
+            # Вызываем callback для реактивного обновления главного каталога
             if self.on_add_to_order:
                 self.on_add_to_order()
                 

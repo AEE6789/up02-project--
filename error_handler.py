@@ -30,17 +30,18 @@ def safe_call(func, *args, **kwargs):
 
 def validate_positive_int(value, field_name="Значение"):
     """
-    Проверяет, что введенное пользователем значение является 
-    положительным целым числом.
-    
-    :param value: Строка, полученная из поля ввода (Entry)
-    :param field_name: Название проверяемого поля для вывода в сообщении
-    :return: Кортеж (True, число) при успехе или (False, сообщение об ошибке)
+    Проверяет, что значение — положительное целое число.
+    :param value: строка для проверки
+    :param field_name: название поля (для сообщения)
+    :return: (True, число) или (False, сообщение)
     """
     try:
         number = int(value)
-        if number <= 0:
-            return (False, f"Поле '{field_name}' должно быть больше нуля")
-        return (True, number)
     except ValueError:
-        return (False, f"Поле '{field_name}' должно быть целым числом")
+        return (False, f"{field_name} должно быть целым числом")
+
+    if number <= 0:
+        return (False, f"{field_name} должно быть больше нуля")
+
+    return (True, number)
+
