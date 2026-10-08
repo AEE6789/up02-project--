@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import os
 
-from styles import COLOR_SECONDARY_BG, COLOR_MAIN_BG, FONT_SIZE_TITLE, font
+from styles import COLOR_SECONDARY_BG, COLOR_MAIN_BG, FONT_SIZE_TITLE, COLOR_ACCENT, FONT_SIZE_NORMAL, font
 from config import APP_TITLE
 import database as db
 from catalog import create_product_card
@@ -55,7 +55,13 @@ class CatalogWindow:
 
         tk.Label(header, text="КАТАЛОГ ТОВАРОВ",
                  font=font(FONT_SIZE_TITLE, bold=True),
-                 bg=COLOR_SECONDARY_BG).pack(expand=True)
+                 bg=COLOR_SECONDARY_BG).pack(side="left", expand=True)
+
+        # === ВЫПОЛНЕНИЕ ЗАДАНИЯ 5.3: Добавление кнопки «Заказы» в шапку каталога ===
+        tk.Button(header, text="Заказы", command=self.open_orders,
+                  bg=COLOR_ACCENT, fg="white",
+                  font=font(FONT_SIZE_NORMAL),
+                  padx=10, pady=5).pack(side="right", padx=15)
 
         self.canvas = tk.Canvas(self.root, bg=COLOR_MAIN_BG, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
@@ -91,6 +97,11 @@ class CatalogWindow:
 
     def run(self):
         self.root.mainloop()
+
+    def open_orders(self):
+        """Открывает окно списка заказов."""
+        from orders_window import OrdersWindow
+        OrdersWindow(self.root)
 
 
 if __name__ == "__main__":
